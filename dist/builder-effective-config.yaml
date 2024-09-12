@@ -1,0 +1,10 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.tuapp.electron
+mac:
+  target: dmg
+win:
+  target: nsis
+files: []
+electronVersion: 32.0.1

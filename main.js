@@ -20,8 +20,8 @@ function createMainWindow () {
         {
             label: 'Archivo',
             submenu: [
-                {label: 'Importar', click: () => { openFileDialog() }},
-                {label: 'Exportar', click: () => { saveFileDialog() }},
+                {label: 'Importar', click: openFileDialog },
+                {label: 'Exportar', click: saveFileDialog },
                 {label: 'Salir', role: 'quit'}
             ]
         },
@@ -52,3 +52,48 @@ function createMainWindow () {
 app.whenReady().then( () => {
     createMainWindow()
 })
+
+// Función para exportar las tareas a un archivo
+function saveFileDialog() {
+    const window = BrowserWindow.getFocusedWindow(); // Obtener la ventana activa
+    dialog.showSaveDialog({
+        title: 'Guardar lista de tareas',
+        defaultPath: 'tareas.json',
+        filters: [
+            { name: 'JSON Files', extensions: ['json'] }
+        ]
+    }).then(result => {
+        if (!result.canceled && result.filePath) {
+            // Solicitar las tareas desde el proceso de renderizado
+            window.webContents.send('solicitar-tareas');
+            ipcMain.once('enviar-tareas', (event, tareas) => {
+                // Escribir las tareas en el archivo
+                fs.writeFileSync(result.filePath, JSON.stringify(tareas, null, 2), 'utf-8');
+                console.log('Tareas exportadas exitosamente');
+            });
+        }
+    }).catch(err => {
+        console.error('Error al guardar el archivo:', err);
+    });
+}
+
+// Función para importar tareas desde un archivo
+function openFileDialog() {
+    const window = BrowserWindow.getFocusedWindow(); // Obtener la ventana activa
+    dialog.showOpenDialog({
+        title: 'Seleccionar archivo de tareas',
+        filters: [
+            { name: 'JSON Files', extensions: ['json'] }
+        ],
+        properties: ['openFile']
+    }).then(result => {
+        if (!result.canceled && result.filePaths.length > 0) {
+            const data = fs.readFileSync(result.filePaths[0], 'utf-8');
+            const tareas = JSON.parse(data);
+            // Enviar las tareas al proceso de renderizado
+            window.webContents.send('tareas-importadas', tareas);
+        }
+    }).catch(err => {
+        console.error('Error al cargar el archivo:', err);
+    });
+}
