@@ -1,3 +1,5 @@
+const {ipcRenderer} = require('electron')
+
 const btnAddTarea = document.getElementById('add-tarea')
 const lista = document.getElementById('lista')
 
@@ -29,6 +31,13 @@ function marcarTarea(textoTarea, completed = false) {
         btnMarcarTarea.addEventListener('click', ()=>{
             if (btnMarcarTarea.checked){
                 textoTarea.classList.add('tachado')
+                const notificacion = new Notification('Tarea Completada',{
+                    body: `La tarea ${textoTarea.textContent} ha sido completada. ¡Muy Bien!`,
+                    silent: false
+                })
+                notificacion.onclick = () => {
+                    console.log('Notificacion de tarea completada clickeada')
+                }
             }else{
                 textoTarea.classList.remove('tachado')
             }
